@@ -50,9 +50,9 @@ sudo ./threads
 
 ## 👥 Authors
 - 📖 Prof. Dr. Javier García Martín (Project Definition)
-- 👨‍💻 Lucas BERNARDEAU (Implementation)
-- 👩‍💻 Dina DIDOUCHE (Implementation)
-- 👨‍💻 Nathan VANATHATHAN (Implementation)
+- 👨‍💻 Lucas (Implementation)
+- 👩‍💻 Dina (Implementation)
+- 👨‍💻 Nathan (Implementation)
 
 ## 📜 License
 📝 **MIT License**
