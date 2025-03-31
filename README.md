@@ -44,6 +44,7 @@ This project is an embedded system designed to detect driver distractions using 
 
 ### 🚀 Build & Run
 ```bash
+cd code
 make C
 sudo ./threads
 ```
