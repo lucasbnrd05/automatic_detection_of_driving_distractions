@@ -15,7 +15,9 @@
 #include <semaphore.h>
 
 // semaphore for critical region 
-sem_t sem_A;
+sem_t sem_S1;
+sem_t sem_S2;
+sem_t sem_D;
 
 #define NUM_THREADS 4
 
@@ -27,6 +29,7 @@ int d1_status = 0;
 int d2_status = 0;
 int d3_status = 0;
 
+int wheel_direction_initial = 0; 
 
 void *head_tilt (){
 	int x_default = Read_Giroscope_X() ;
@@ -34,7 +37,6 @@ void *head_tilt (){
 
 	int x_previous = x_default;
 	int y_previous= y_default;
-	int wheel_direction_initial = read_single_ADC_sensor(2); 
 
 	while(1)
 	{
@@ -54,9 +56,9 @@ void *head_tilt (){
 		int turn_right = (wheel_direction > wheel_direction_initial+20 && dif_y_p >= 30 && dif_y_a >= 30);
 		int turn_left = (wheel_direction > wheel_direction_initial-20 && dif_y_p <= -30 && dif_y_a <= -30);
 		
-		sem_wait(&sem_A);
+		sem_wait(&sem_S1);
 		s1_status = head_tilt || (head_turning && !(turn_right || turn_left));
-		sem_post(&sem_A);
+		sem_post(&sem_S1);
 		
 		x_previous = x_actual;
 		y_previous= y_actual;
@@ -67,86 +69,15 @@ void *head_tilt (){
 }
 
 
-// void *safety_distance (){
-
-// 	while(1)
-// 	{
-// 		int state = 0;
-// 		int Speed = read_single_ADC_sensor(3) / 10;
-// 		// int safetydist = (Speed * Speed / 100);
-// 		int dist = getDistance();
-		
-// 		float deceleration = 5.0; 
-// 		int safetydist = ((Speed * Speed) / (2 * deceleration))/10;
-// 		//printf("Speed : %d,Distance  : %d, Safetydistance :  %d, Safety distance / 3 :  %d \n", Speed, dist, safetydist, safetydist/3);
-
-// 		if(dist  < safetydist/3)
-// 		{
-// 				//state = 1;
-// 				sem_wait(&sem_A);
-// 				d3_status = 1;
-// 				d0_status = 0;
-
-// 				sem_post(&sem_A);
-// 		}
-// 		else{
-			
-// 				sem_wait(&sem_A);
-// 				d3_status = 0;
-// 				d0_status = 1;
-// 				sem_post(&sem_A);
-// 				if(dist  < safetydist/2)
-// 				{
-// 						//state = 1;
-// 						sem_wait(&sem_A);
-// 						d2_status = 1;
-// 						d0_status = 0;
-// 						sem_post(&sem_A);
-// 				}
-// 				else{
-					
-// 						sem_wait(&sem_A);
-// 						d2_status = 0;
-// 						d0_status = 1;
-// 						sem_post(&sem_A);
-// 						if(dist  < safetydist)
-// 						{
-// 								//state = 1;
-// 								sem_wait(&sem_A);
-// 								d1_status = 1;
-// 								d0_status = 0;
-// 								sem_post(&sem_A);
-// 						}
-// 						else{
-// 								sem_wait(&sem_A);
-// 								d1_status = 0;
-// 								d0_status = 1;
-
-// 								sem_post(&sem_A);
-// 						}
-// 				}				
-// 		}
-// 		/*if (state)
-// 			d0_status = 0;
-// 		else 
-// 			d0_status = 1;*/
-
-// 		delay(300);
-// 	}
-// 	pthread_exit (NULL);
-// }
-
-
 void *safety_distance() {
     while (1) {
         int Speed = read_single_ADC_sensor(3) / 10;
         int dist = getDistance();
         
-        // Corrected safety distance calculation
         int safetydist = (Speed / 10) * (Speed / 10);
-		printf("Speed : %d,Distance  : %d, Safetydistance :  %d, Safety distance / 3 :  %d \n", Speed, dist, safetydist, safetydist/3);
+		//printf("Speed : %d,Distance  : %d, Safetydistance :  %d, Safety distance / 3 :  %d \n", Speed, dist, safetydist, safetydist/3);
 
-        sem_wait(&sem_A);  
+        sem_wait(&sem_D);  
         
         if (dist < safetydist / 3) {
             d3_status = 1;
@@ -173,13 +104,12 @@ void *safety_distance() {
             d0_status = 1;
         }
 
-        sem_post(&sem_A);  // Unlock after modifications
+        sem_post(&sem_D);  
         
         delay(300);
     }
     pthread_exit(NULL);
 }
-
 
 void *steering_wheel_turns (){
 
@@ -187,22 +117,19 @@ void *steering_wheel_turns (){
 
 	while(1)
 	{
+		sem_wait(&sem_S2);
+
 		int wheel_direction = read_single_ADC_sensor(2);  
 		int Speed = read_single_ADC_sensor(3) /10 ;
 		int diff = wheel_direction_previous - wheel_direction;
 		if( (diff >= 20 || diff <=-20) && Speed >=40)
-		{
-			sem_wait(&sem_A);
 			s2_status = 1;
-			sem_post(&sem_A);
-		}
 		else 
 		{
-			sem_wait(&sem_A);
 			s2_status = 0;
-			sem_post(&sem_A);
+			wheel_direction_previous = wheel_direction;
 		}
-		wheel_direction_previous = wheel_direction;
+		sem_post(&sem_S2);
 		delay(350);
 	}
 	pthread_exit (NULL);
@@ -211,16 +138,22 @@ void *steering_wheel_turns (){
 void *symptom_function (){
 	while(1)
 	{
-		sem_wait(&sem_A);
+		sem_wait(&sem_S1);
 		int s1 = s1_status;
+		sem_post(&sem_S1);
+		sem_wait(&sem_S2);
 		int s2 = s2_status;
+		sem_post(&sem_S2);
+		sem_wait(&sem_D);
+
 		int d0 = d0_status;
 		int d1 = d1_status;
 		int d2 = d2_status;
 		int d3 = d3_status;
-		sem_post(&sem_A);	
+		sem_post(&sem_D);
+
 		
-		printf("s1 : %d; s2 : %d; d0 : %d; d1 : %d; d2 : %d; d3 : %d \n",s1,s2,d0, d1,d2,d3);	
+		//printf("s1 : %d; s2 : %d; d0 : %d; d1 : %d; d2 : %d; d3 : %d \n",s1,s2,d0, d1,d2,d3);	
 		if(d3)
 		{			
 			set_led_1(1);
@@ -283,8 +216,11 @@ int main(void)
 {
     int n;
     n = init_devices ();
-    
-    sem_init(&sem_A, 0, 1); // init semaphore
+    wheel_direction_initial = read_single_ADC_sensor(2); 
+
+    sem_init(&sem_S1, 0, 1); // init semaphore
+    sem_init(&sem_S2, 0, 1); // init semaphore
+    sem_init(&sem_D, 0, 1); // init semaphore
 
     pthread_t thread [NUM_THREADS]; 
 
