@@ -55,8 +55,6 @@ sudo ./threads
 - 👩‍💻 Dina (Implementation)
 - 👨‍💻 Nathan (Implementation)
 
-## 📜 License
-📝 **MIT License**
 
 ---
 🚀 *This project aims to enhance driving safety by reducing distractions and improving reaction times in critical situations.*
