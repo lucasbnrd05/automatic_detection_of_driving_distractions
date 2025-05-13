@@ -71,7 +71,7 @@ void *head_tilt (){
 
 void *safety_distance() {
     while (1) {
-        int Speed = read_single_ADC_sensor(3) / 10;
+        int Speed = (read_single_ADC_sensor(3) * 140 ) / 1023;
         int dist = getDistance();
         
         int safetydist = (Speed / 10) * (Speed / 10);
@@ -120,7 +120,7 @@ void *steering_wheel_turns (){
 		sem_wait(&sem_S2);
 
 		int wheel_direction = read_single_ADC_sensor(2);  
-		int Speed = read_single_ADC_sensor(3) /10 ;
+		int Speed = (read_single_ADC_sensor(3) * 140 ) / 1023 ;
 		int diff = wheel_direction_previous - wheel_direction;
 		if( (diff >= 20 || diff <=-20) && Speed >=40)
 			s2_status = 1;
