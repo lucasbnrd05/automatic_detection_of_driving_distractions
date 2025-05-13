@@ -6,6 +6,10 @@
 ## 📜 Introduction
 This project, developed for the "Embedded System Modelling" course (Prof. Dr. Javier García Martín), implements an embedded system for the **Automatic Detection of Driving Distractions**. The system aims to enhance road safety by identifying signs of driver inattention through various sensors and responding with appropriate alerts or actions.
 
+## Our Website
+🔗 [Visit the  Website](https://lucasbnrd05.github.io/autodistractdetect/index.html)
+
+
 ## 🎯 Project Objective
 The primary goal is to detect a driver's lack of attention by analyzing data from vehicle-installed sensors. Upon detecting symptoms of distraction, the system will trigger actions designed to re-engage the driver and mitigate potential risks.
 
